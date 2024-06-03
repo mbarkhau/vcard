@@ -72,7 +72,9 @@
 
     const width_mm = 91
     const height_mm = 61
-    const units_per_mm = 72 / 25.4
+    const pt_per_mm = 72 / 25.4
+    const width_pt = width_mm * pt_per_mm
+    const height_pt = height_mm * pt_per_mm
 
     document.getElementById("gen-pdf").addEventListener('click', async function() {
         var vorname   = document.getElementsByName('vorname')[0].value || "Max"
@@ -106,22 +108,35 @@
         const gothamBoldFont = await pdfDoc.embedFont(await gothamBoldPromise)
         const robotoBoldFont = await pdfDoc.embedFont(await robotoBoldPromise)
 
-        const back = pdfDoc.addPage([width_mm * units_per_mm, height_mm * units_per_mm])
-        const front = pdfDoc.addPage([width_mm * units_per_mm, height_mm * units_per_mm])
+        const back = pdfDoc.addPage([width_mm * pt_per_mm, height_mm * pt_per_mm])
+        const front = pdfDoc.addPage([width_mm * pt_per_mm, height_mm * pt_per_mm])
 
-        front.drawImage(frontImage, {
-            x: 0,
-            y: 0,
-            width: width_mm * units_per_mm,
-            height: height_mm * units_per_mm,
-        })
+        front.drawRectangle({x: -50, y: -50, width: width_pt + 100, height: height_pt + 100, color: rgb(0, 0, 0)})
+        back.drawRectangle({x: -50, y: -50, width: width_pt + 100, height: height_pt + 100, color: rgb(0.984, 0.690, 0.082)})
 
-        back.drawImage(backImage, {
-            x: 0,
-            y: 0,
-            width: width_mm * units_per_mm,
-            height: height_mm * units_per_mm,
-        })
+        front.drawImage(frontImage, {x: 0, y: 0, width: width_pt, height: height_pt})
+        back.drawImage(backImage, {x: 0, y: 0, width: width_pt, height: height_pt})
+
+        function cutMarker(x, y, w, h) {
+            back.drawLine({
+                thickness: 0.4, color: rgb(0, 0, 0),
+                start: {x: x * pt_per_mm, y: y * pt_per_mm},
+                end  : {x: (x + w) * pt_per_mm, y: (y + h) * pt_per_mm}
+            })
+        }
+
+        cutMarker(0, 3, 1.5, 0)
+        cutMarker(0, height_mm - 3, 1.5, 0)
+
+        cutMarker(width_mm, 3, -1.5, 0)
+        cutMarker(width_mm, height_mm - 3, -1.5, 0)
+
+        cutMarker(3, 0, 0, 1.5)
+        cutMarker(width_mm - 3, 0, 0, 1.5)
+
+        cutMarker(3, height_mm, 0, -1.5)
+        cutMarker(width_mm - 3, height_mm, 0, -1.5)
+
 
         function textRenderer(page, opts) {
             return function drawText(text, x, y) {
@@ -175,7 +190,7 @@
         var date = new Date().toISOString().replaceAll("-", "").replaceAll(":", "").slice(0, 15)
 
         const pdfBytes = await pdfDoc.save()
-        download(pdfBytes, `die-libertaeren-vcard-${short_name}-${date}.pdf`, "application/pdf");
+        download(pdfBytes, `die-libertaeren-85x55-vcard-${short_name}-${date}.pdf`, "application/pdf");
     })
 </script>
 </body>
