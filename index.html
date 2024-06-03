@@ -77,7 +77,7 @@
     document.getElementById("gen-pdf").addEventListener('click', async function() {
         var vorname   = document.getElementsByName('vorname')[0].value || "Max"
         var nachname  = document.getElementsByName('nachname')[0].value || "Mustermann"
-        var rolle     = document.getElementsByName('rolle')[0].value || "Bundesgeschäftsführer"
+        var rolle     = document.getElementsByName('rolle')[0].value || ""
         var adresse_1 = document.getElementsByName('adresse-1')[0].value || "Postfach 75 02 07"
         var adresse_2 = document.getElementsByName('adresse-2')[0].value || "81332 München"
         var email     = document.getElementsByName('email')[0].value || "MaxMustermann@die-libertaeren.de"
@@ -141,7 +141,7 @@
             size: 11.5,
             font: gothamBoldFont,
             color: rgb(0.0, 0.0, 0.0),
-            letterSpacing: -0.7,
+            letterSpacing: -0.5,
         })
 
         renderTitle(vorname, 29.5, 139)
@@ -151,7 +151,7 @@
             size: 9.5,
             font: gothamBoldFont,
             color: rgb(0.0, 0.0, 0.0),
-            letterSpacing: -0.5,
+            letterSpacing: -0.3,
         })
 
         renderRole(rolle, 29.5, 110)
@@ -160,7 +160,7 @@
             size: 7.5,
             font: robotoBoldFont,
             color: rgb(0.0, 0.0, 0.0),
-            letterSpacing: -0.15,
+            letterSpacing: -0.10,
         })
 
         renderInfo(adresse_1, 42.0, 95 - 2)
