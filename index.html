@@ -77,10 +77,12 @@
     document.getElementById("gen-pdf").addEventListener('click', async function() {
         var vorname   = document.getElementsByName('vorname')[0].value || "Max"
         var nachname  = document.getElementsByName('nachname')[0].value || "Mustermann"
-        var rolle     = document.getElementsByName('rolle')[0].value || ""
+        var rolle     = document.getElementsByName('rolle')[0].value || "Bundesgeschäftsführer"
         var adresse_1 = document.getElementsByName('adresse-1')[0].value || "Postfach 75 02 07"
         var adresse_2 = document.getElementsByName('adresse-2')[0].value || "81332 München"
-        var email     = document.getElementsByName('email')[0].value || "MaxMustermann@die-libertaeren.de"
+        var email     = document.getElementsByName('email')[0].value || (
+            `${vorname.toLowerCase()}.${nachname.toLowerCase()}@die-libertaeren.de`
+        );
         var telefon   = document.getElementsByName('telefon')[0].value || "01515 000000"
         var x_profil  = document.getElementsByName('x-profil')[0].value || "@MaxMustermann"
 
@@ -138,36 +140,36 @@
         }
 
         const renderTitle = textRenderer(back, {
-            size: 11.5,
-            font: gothamBoldFont,
-            color: rgb(0.0, 0.0, 0.0),
-            letterSpacing: -0.5,
-        })
-
-        renderTitle(vorname, 29.5, 139)
-        renderTitle(nachname, 29.5, 128)
-
-        const renderRole = textRenderer(back, {
             size: 9.5,
             font: gothamBoldFont,
             color: rgb(0.0, 0.0, 0.0),
-            letterSpacing: -0.3,
+            letterSpacing: -0.4,
         })
 
-        renderRole(rolle, 29.5, 110)
+        renderTitle(vorname, 30.0, 139)
+        renderTitle(nachname, 30.0, 130)
+
+        const renderRole = textRenderer(back, {
+            size: 7.0,
+            font: gothamBoldFont,
+            color: rgb(0.0, 0.0, 0.0),
+            letterSpacing: -0.25,
+        })
+
+        renderRole(rolle, 30.0, 112)
 
         const renderInfo = textRenderer(back, {
-            size: 7.5,
+            size: 7.0,
             font: robotoBoldFont,
             color: rgb(0.0, 0.0, 0.0),
             letterSpacing: -0.10,
         })
 
-        renderInfo(adresse_1, 42.0, 95 - 2)
-        renderInfo(adresse_2, 42.0, 95 - 9.2)
-        renderInfo(email    , 42.0, 95 - 22.8)
-        renderInfo(telefon  , 42.0, 95 - 36.2)
-        renderInfo(x_profil , 42.0, 95 - 48.8)
+        renderInfo(adresse_1, 40.0, 95 - 3)
+        renderInfo(adresse_2, 40.0, 95 - 10.2)
+        renderInfo(email    , 40.0, 95 - 22.8)
+        renderInfo(telefon  , 40.0, 95 - 36.2)
+        renderInfo(x_profil , 40.0, 95 - 48.8)
 
         var short_name = (vorname.slice(0, 1) + nachname.slice(0, 3)).toLowerCase()
         var date = new Date().toISOString().replaceAll("-", "").replaceAll(":", "").slice(0, 15)
