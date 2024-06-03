@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Visitenkarten Generator</title>
+    <style type="text/css">
+        body {
+            font-family: sans-serif;
+        }
+        #form {
+            max-width: 20em;
+            margin: 1em auto;
+            text-align: center;
+        }
+
+        label {
+            min-width: 8em;
+            display: inline-block;
+            text-align: left;
+        }
+        #form div {
+            margin: 0.3em;
+        }
+    </style>
+
+    <script type="text/javascript" src="pdf-lib.js"></script>
+    <script src="fontkit.umd.js"></script>
+    <script type="text/javascript" src="download.js"></script>
+
+</head>
+<body>
+    <div id="form">
+        <div>
+            <label>Vorname</label>
+            <input type="text" name="vorname" placeholder="Max">
+        </div>
+        <div>
+            <label>Nachname</label>
+            <input type="text" name="nachname" placeholder="Mustermann">
+        </div>
+        <div>
+            <label>Rolle/Aufgabe</label>
+            <input type="text" name="rolle" placeholder="Vollmitglied">
+        </div>
+        <div>
+            <label>Adresse Zeile 1</label>
+            <input type="text" name="adresse-1" placeholder="Postfach 75 02 07">
+        </div>
+        <div>
+            <label>Adresse Zeile 2</label>
+            <input type="text" name="adresse-2" placeholder="81332 München">
+        </div>
+        <div>
+            <label>E-Mail</label>
+            <input type="text" name="email" placeholder="max.mustermann@die-libertaeren.de">
+        </div>
+        <div>
+            <label>Telefon</label>
+            <input type="text" name="telefon" placeholder="01515 000000">
+        </div>
+        <div>
+            <label>X-Profil</label>
+            <input type="text" name="x-profil" placeholder="@MaxMuster">
+        </div>
+
+        <button id="gen-pdf">Generieren</button>
+    </div>
+
+<script type="text/javascript">
+    const { PDFDocument, StandardFonts, rgb } = PDFLib;
+
+    const width_mm = 91
+    const height_mm = 61
+    const units_per_mm = 72 / 25.4
+
+    document.getElementById("gen-pdf").addEventListener('click', async function() {
+        var vorname   = document.getElementsByName('vorname')[0].value || "Max"
+        var nachname  = document.getElementsByName('nachname')[0].value || "Mustermann"
+        var rolle     = document.getElementsByName('rolle')[0].value || "Bundesgeschäftsführer"
+        var adresse_1 = document.getElementsByName('adresse-1')[0].value || "Postfach 75 02 07"
+        var adresse_2 = document.getElementsByName('adresse-2')[0].value || "81332 München"
+        var email     = document.getElementsByName('email')[0].value || "MaxMustermann@die-libertaeren.de"
+        var telefon   = document.getElementsByName('telefon')[0].value || "01515 000000"
+        var x_profil  = document.getElementsByName('x-profil')[0].value || "@MaxMustermann"
+
+        vorname = vorname.toUpperCase()
+        nachname = nachname.toUpperCase()
+        rolle = rolle.toUpperCase()
+
+        const gothamBoldPromise = fetch("Gotham-Font/GothamBold.ttf").then(res => res.arrayBuffer())
+        const robotoBoldPromise = fetch("Roboto-Font/Roboto-Bold.ttf").then(res => res.arrayBuffer())
+
+        const frontPromise = fetch("vcard-front-v2.png").then((res) => res.arrayBuffer())
+        // const backPromise = fetch("vcard-back-fontdebug.png").then((res) => res.arrayBuffer())
+        const backPromise = fetch("vcard-back-v2.png").then((res) => res.arrayBuffer())
+
+        const pdfDoc = await PDFDocument.create()
+        pdfDoc.registerFontkit(fontkit)
+
+        const frontImage = await pdfDoc.embedPng(await frontPromise)
+        const backImage = await pdfDoc.embedPng(await backPromise)
+
+        const gothamBoldFont = await pdfDoc.embedFont(await gothamBoldPromise)
+        const robotoBoldFont = await pdfDoc.embedFont(await robotoBoldPromise)
+
+        const back = pdfDoc.addPage([width_mm * units_per_mm, height_mm * units_per_mm])
+        const front = pdfDoc.addPage([width_mm * units_per_mm, height_mm * units_per_mm])
+
+        front.drawImage(frontImage, {
+            x: 0,
+            y: 0,
+            width: width_mm * units_per_mm,
+            height: height_mm * units_per_mm,
+        })
+
+        back.drawImage(backImage, {
+            x: 0,
+            y: 0,
+            width: width_mm * units_per_mm,
+            height: height_mm * units_per_mm,
+        })
+
+        function textRenderer(page, opts) {
+            return function drawText(text, x, y) {
+                opts.x = x
+                opts.y = y
+                opts.size = opts.size || 11.5
+                opts.color = opts.color || rgb(0, 0, 0)
+                opts.letterSpacing = opts.letterSpacing || 0.0
+
+                for (const char of text) {
+                    const charWidth = opts.font.widthOfTextAtSize(char, opts.size);
+                    page.drawText(char, opts);
+                    opts.x += charWidth + opts.letterSpacing;
+                }
+            }
+        }
+
+        const renderTitle = textRenderer(back, {
+            size: 11.5,
+            font: gothamBoldFont,
+            color: rgb(0.0, 0.0, 0.0),
+            letterSpacing: -0.7,
+        })
+
+        renderTitle(vorname, 29.5, 139)
+        renderTitle(nachname, 29.5, 128)
+
+        const renderRole = textRenderer(back, {
+            size: 9.5,
+            font: gothamBoldFont,
+            color: rgb(0.0, 0.0, 0.0),
+            letterSpacing: -0.5,
+        })
+
+        renderRole(rolle, 29.5, 110)
+
+        const renderInfo = textRenderer(back, {
+            size: 7.5,
+            font: robotoBoldFont,
+            color: rgb(0.0, 0.0, 0.0),
+            letterSpacing: -0.15,
+        })
+
+        renderInfo(adresse_1, 42.0, 95 - 2)
+        renderInfo(adresse_2, 42.0, 95 - 9.2)
+        renderInfo(email    , 42.0, 95 - 22.8)
+        renderInfo(telefon  , 42.0, 95 - 36.2)
+        renderInfo(x_profil , 42.0, 95 - 48.8)
+
+        var short_name = (vorname.slice(0, 1) + nachname.slice(0, 3)).toLowerCase()
+        var date = new Date().toISOString().replaceAll("-", "").replaceAll(":", "").slice(0, 15)
+
+        const pdfBytes = await pdfDoc.save()
+        download(pdfBytes, `die-libertaeren-vcard-${short_name}-${date}.pdf`, "application/pdf");
+    })
+</script>
+</body>
+</html>
