@@ -41,7 +41,7 @@
         </div>
         <div>
             <label>Rolle/Aufgabe</label>
-            <input type="text" name="rolle" placeholder="Vollmitglied">
+            <input type="text" name="rolle" placeholder="Parteimitglied">
         </div>
         <div>
             <label>Adresse Zeile 1</label>
@@ -68,7 +68,7 @@
     </div>
 
 <script type="text/javascript">
-    const { PDFDocument, StandardFonts, rgb } = PDFLib;
+    const { PDFDocument, StandardFonts, rgb, cymk } = PDFLib;
 
     const width_mm = 91
     const height_mm = 61
@@ -79,14 +79,14 @@
     document.getElementById("gen-pdf").addEventListener('click', async function() {
         var vorname   = document.getElementsByName('vorname')[0].value || "Max"
         var nachname  = document.getElementsByName('nachname')[0].value || "Mustermann"
-        var rolle     = document.getElementsByName('rolle')[0].value || "Bundesgeschäftsführer"
+        var rolle     = document.getElementsByName('rolle')[0].value || "Parteimitglied"
         var adresse_1 = document.getElementsByName('adresse-1')[0].value || "Postfach 75 02 07"
         var adresse_2 = document.getElementsByName('adresse-2')[0].value || "81332 München"
         var email     = document.getElementsByName('email')[0].value || (
             `${vorname.toLowerCase()}.${nachname.toLowerCase()}@die-libertaeren.de`
         );
-        var telefon   = document.getElementsByName('telefon')[0].value || "01515 000000"
-        var x_profil  = document.getElementsByName('x-profil')[0].value || "@MaxMustermann"
+        var telefon   = document.getElementsByName('telefon')[0].value || "+49 159 06320502"
+        var x_profil  = document.getElementsByName('x-profil')[0].value || "@Die_Libertaeren"
 
         vorname = vorname.toUpperCase()
         nachname = nachname.toUpperCase()
