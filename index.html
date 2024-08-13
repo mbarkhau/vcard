@@ -243,6 +243,14 @@
         download(pdfBytes, `die-libertaeren-85x55-vcard-${info.short_name}-${date}.pdf`, "application/pdf");
     });
 
+    function setSignaturePreview(previewHtml) {
+        document.getElementById('mail-sig-preview').innerHTML = (
+            mailSigHTML
+            .replace(/<pre>\s*/gm, "<pre>")
+            .replace(/\s*<\/pre>/gm, "</pre>")
+        )
+    }
+
     function updateEMailSig() {
         const info = getInfo()
         var clean_telefon = info.telefon
@@ -278,6 +286,15 @@ YouTube  : <a href="https://www.youtube.com/@die_libertaeren">youtube.com/@Die_L
 </pre>
 </font>
         `
+        if (info.x_profil == DEFAULT_X_PROFIL) {
+            mailSigHTML = mailSigHTML.replace(/^X\/Twitter.*/m, "")
+            mailSigHTML = mailSigHTML.replace(/^Telefon  :/m, "Telefon:")
+            mailSigHTML = mailSigHTML.replace(/^E-Mail   :/m, "E-Mail :")
+        }
+        if (info.telefon == DEFAULT_TELEFON) {
+            mailSigHTML = mailSigHTML.replace(/^Telefon.*/m, "")
+            mailSigHTML = mailSigHTML.replace(/^E-Mail :/m, "E-Mail:")
+        }
 
         mailSigHTML = mailSigHTML.trim()
         mailSigHTML = mailSigHTML.replaceAll("\n\n", "\n")
@@ -285,12 +302,11 @@ YouTube  : <a href="https://www.youtube.com/@die_libertaeren">youtube.com/@Die_L
         window.mailSigHTML = mailSigHTML
 
         document.getElementById('mail-sig-html').value = mailSigHTML
-        document.getElementById('mail-sig-preview').innerHTML = mailSigHTML.replace(/<pre>\s*/gm, "<pre>")
+        setSignaturePreview(mailSigHTML)
     }
 
     document.querySelector('textarea').addEventListener('keyup', function() {
-        const mailSigHTML = document.getElementById('mail-sig-html').value;
-        document.getElementById('mail-sig-preview').innerHTML = mailSigHTML.replace(/<pre>\s*/gm, "<pre>")
+        setSignaturePreview(document.getElementById('mail-sig-html').value);
     })
 
     updateEMailSig();
