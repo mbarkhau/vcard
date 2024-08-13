@@ -37,6 +37,20 @@
         #form div {
             margin: 0.3em;
         }
+
+        @keyframes flashButton {
+          0%   { background-color: #6F6; }
+          100% { background-color: #EEE; }
+        }
+
+        button {
+            cursor: pointer;
+            line-height: 1.3em;
+            background-color: #EEE;
+        }
+        button.clicked {
+            animation: flashButton 150ms ease;
+        }
     </style>
 
     <script type="text/javascript" src="pdf-lib.js"></script>
@@ -85,7 +99,9 @@
     <hr>
 
     <div id="mail-sig">
-        <label>E-Mail Signatur</label>
+        <button id="copy-raw">🗐 Kopieren</button>
+        <label>E-Mail Signatur für Thunderbird:</label>
+        <br>
         <br>
 
         <textarea id="mail-sig-html"></textarea>
@@ -93,8 +109,12 @@
         <br>
         <br>
 
-        <div id="mail-sig-preview">
-        </div>
+        <button id="copy-formatted">🗐 Kopieren</button>
+        <label>E-Mail Signatur für Outlook:</label>
+        <br>
+        <br>
+
+        <div id="mail-sig-preview"></div>
     </div>
 
 <script type="text/javascript">
@@ -245,7 +265,7 @@
 
     function setSignaturePreview(previewHtml) {
         document.getElementById('mail-sig-preview').innerHTML = (
-            mailSigHTML
+            previewHtml
             .replace(/<pre>\s*/gm, "<pre>")
             .replace(/\s*<\/pre>/gm, "</pre>")
         )
@@ -279,7 +299,7 @@ Geschäftsführung: Florian Handwerker<br>
 
 <pre>
 Webseite : <a href="https://die-libertaeren.de/">die-libertaeren.de</a>
-E-Mail   : <a href="mailto:info@die-libertaeren.de">info@die-libertaeren.de"</a>
+E-Mail   : <a href="mailto:info@die-libertaeren.de">info@die-libertaeren.de</a>
 Telefon  : <a href="tel:${DEFAULT_TELEFON.replaceAll(" ", "")}">${DEFAULT_TELEFON}</a>
 X/Twitter: <a href="https://x.com/Die_Libertaeren">@Die_Libertaeren</a>
 YouTube  : <a href="https://www.youtube.com/@die_libertaeren">youtube.com/@Die_Libertaeren</a>
@@ -299,8 +319,6 @@ YouTube  : <a href="https://www.youtube.com/@die_libertaeren">youtube.com/@Die_L
         mailSigHTML = mailSigHTML.trim()
         mailSigHTML = mailSigHTML.replaceAll("\n\n", "\n")
 
-        window.mailSigHTML = mailSigHTML
-
         document.getElementById('mail-sig-html').value = mailSigHTML
         setSignaturePreview(mailSigHTML)
     }
@@ -315,6 +333,33 @@ YouTube  : <a href="https://www.youtube.com/@die_libertaeren">youtube.com/@Die_L
     for (var i = 0; i < inputNodes.length; i++) {
         inputNodes[i].addEventListener('keyup', updateEMailSig);
     }
+
+    const copyRawButton = document.getElementById('copy-raw')
+    const copyFormattedButton = document.getElementById('copy-formatted')
+
+    copyRawButton.addEventListener('click', function() {
+        const promise = navigator.clipboard.writeText(document.getElementById('mail-sig-preview').innerHTML)
+        promise.then(function() {
+            copyRawButton.classList.add('clicked')
+            setTimeout(function() {
+                copyRawButton.classList.remove('clicked')
+            }, 300)
+        })
+    })
+
+    copyFormattedButton.addEventListener('click', function() {
+        const htmlText = document.getElementById('mail-sig-preview').innerHTML
+        const htmlBlob = new Blob([ htmlText ], {type: 'text/html'});
+        const promise = navigator.clipboard.write([new ClipboardItem({'text/html': htmlBlob })])
+
+        promise.then(function() {
+            copyFormattedButton.classList.add('clicked')
+            setTimeout(function() {
+                copyFormattedButton.classList.remove('clicked')
+            }, 300)
+        })
+    })
+
 
 </script>
 </body>
