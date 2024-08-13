@@ -8,10 +8,25 @@
         body {
             font-family: sans-serif;
         }
+
         #form {
             max-width: 20em;
             margin: 1em auto;
             text-align: center;
+        }
+        #mail-sig {
+            max-width: 30em;
+            margin: 1em auto;
+        }
+        textarea {
+            width: 50em;
+            height: 20em;
+            padding: 1em;
+            font-size: 8pt;
+        }
+        #mail-sig-preview {
+            outline: 1px solid #888;
+            padding: 1em;
         }
 
         label {
@@ -64,11 +79,29 @@
             <input type="text" name="x-profil" placeholder="@MaxMuster">
         </div>
 
-        <button id="gen-pdf">Generieren</button>
+        <button id="gen-pdf">PDF Generieren</button>
+    </div>
+
+    <hr>
+
+    <div id="mail-sig">
+        <label>E-Mail Signatur</label>
+        <br>
+
+        <textarea id="mail-sig-html"></textarea>
+
+        <br>
+        <br>
+
+        <div id="mail-sig-preview">
+        </div>
     </div>
 
 <script type="text/javascript">
     const { PDFDocument, StandardFonts, rgb, cymk } = PDFLib;
+
+    const DEFAULT_X_PROFIL = "Die_Libertaeren"
+    const DEFAULT_TELEFON = "+49 159 0632 0502"
 
     const width_mm = 91
     const height_mm = 61
@@ -76,21 +109,39 @@
     const width_pt = width_mm * pt_per_mm
     const height_pt = height_mm * pt_per_mm
 
-    document.getElementById("gen-pdf").addEventListener('click', async function() {
-        var vorname   = document.getElementsByName('vorname')[0].value || "Max"
-        var nachname  = document.getElementsByName('nachname')[0].value || "Mustermann"
-        var rolle     = document.getElementsByName('rolle')[0].value || "Parteimitglied"
-        var adresse_1 = document.getElementsByName('adresse-1')[0].value || "Postfach 75 02 07"
-        var adresse_2 = document.getElementsByName('adresse-2')[0].value || "81332 München"
-        var email     = document.getElementsByName('email')[0].value || (
-            `${vorname.toLowerCase()}.${nachname.toLowerCase()}@die-libertaeren.de`
-        );
-        var telefon   = document.getElementsByName('telefon')[0].value || "+49 159 06320502"
-        var x_profil  = document.getElementsByName('x-profil')[0].value || "@Die_Libertaeren"
+    function getInfo() {
+        var vorname = document.getElementsByName('vorname')[0].value || "Max"
+        var nachname = document.getElementsByName('nachname')[0].value || "Mustermann"
+        var rolle = document.getElementsByName('rolle')[0].value || "Parteimitglied"
 
-        vorname = vorname.toUpperCase()
-        nachname = nachname.toUpperCase()
-        rolle = rolle.toUpperCase()
+        var x_profil = document.getElementsByName('x-profil')[0].value || DEFAULT_X_PROFIL
+        if (x_profil.slice(0, 1) == "@") {
+            x_profil = x_profil.slice(1)
+        }
+        var default_email = `
+            ${vorname.toLowerCase().replace("ä", "ae").replace("ö", "oe").replace("ü", "ue")}
+            .
+            ${nachname.toLowerCase().replace("ä", "ae").replace("ö", "oe").replace("ü", "ue")}
+            @die-libertaeren.de
+        `
+
+        default_email = default_email.replaceAll(/\s/g, "")
+
+        return {
+            vorname  : vorname,
+            nachname : nachname,
+            rolle    : rolle,
+            adresse_1: document.getElementsByName('adresse-1')[0].value || "Postfach 75 02 07",
+            adresse_2: document.getElementsByName('adresse-2')[0].value || "81332 München",
+            email    : document.getElementsByName('email')[0].value || default_email,
+            telefon  : document.getElementsByName('telefon')[0].value || DEFAULT_TELEFON,
+            x_profil : x_profil,
+            short_name: (vorname.slice(0, 1) + nachname.slice(0, 3)).toLowerCase(),
+        }
+    }
+
+    document.getElementById("gen-pdf").addEventListener('click', async function() {
+        const info = getInfo()
 
         const gothamBoldPromise = fetch("Gotham-Font/GothamBold.ttf").then(res => res.arrayBuffer())
         const robotoBoldPromise = fetch("Roboto-Font/Roboto-Bold.ttf").then(res => res.arrayBuffer())
@@ -161,8 +212,8 @@
             letterSpacing: -0.4,
         })
 
-        renderTitle(vorname, 30.0, 139)
-        renderTitle(nachname, 30.0, 130)
+        renderTitle(info.vorname.toUpperCase(), 30.0, 139)
+        renderTitle(info.nachname.toUpperCase(), 30.0, 130)
 
         const renderRole = textRenderer(back, {
             size: 7.0,
@@ -171,7 +222,7 @@
             letterSpacing: -0.25,
         })
 
-        renderRole(rolle, 30.0, 112)
+        renderRole(info.rolle.toUpperCase(), 30.0, 112)
 
         const renderInfo = textRenderer(back, {
             size: 7.0,
@@ -180,18 +231,75 @@
             letterSpacing: -0.10,
         })
 
-        renderInfo(adresse_1, 40.0, 95 - 3)
-        renderInfo(adresse_2, 40.0, 95 - 10.2)
-        renderInfo(email    , 40.0, 95 - 22.8)
-        renderInfo(telefon  , 40.0, 95 - 36.2)
-        renderInfo(x_profil , 40.0, 95 - 48.8)
+        renderInfo(info.adresse_1, 40.0, 95 - 3)
+        renderInfo(info.adresse_2, 40.0, 95 - 10.2)
+        renderInfo(info.email    , 40.0, 95 - 22.8)
+        renderInfo(info.telefon  , 40.0, 95 - 36.2)
+        renderInfo('@' + info.x_profil, 40.0, 95 - 48.8)
 
-        var short_name = (vorname.slice(0, 1) + nachname.slice(0, 3)).toLowerCase()
         var date = new Date().toISOString().replaceAll("-", "").replaceAll(":", "").slice(0, 15)
 
         const pdfBytes = await pdfDoc.save()
-        download(pdfBytes, `die-libertaeren-85x55-vcard-${short_name}-${date}.pdf`, "application/pdf");
+        download(pdfBytes, `die-libertaeren-85x55-vcard-${info.short_name}-${date}.pdf`, "application/pdf");
+    });
+
+    function updateEMailSig() {
+        const info = getInfo()
+        var clean_telefon = info.telefon
+        clean_telefon = clean_telefon.replaceAll("-", "")
+        clean_telefon = clean_telefon.replaceAll(" ", "")
+
+        var mailSigHTML = `
+Mit freundlichen Grüßen<br>
+${info.vorname} ${info.nachname}<br>
+${info.rolle}<br>
+
+<font size="2" color="#888">
+<pre>
+E-Mail   : <a href="mailto:${info.email}">${info.email}</a>
+Telefon  : <a href="tel:${clean_telefon}">${info.telefon}</a>
+X/Twitter: <a href="https://x.com/${info.x_profil}">@${info.x_profil}</a>
+</pre>
+
+DIE LIBERTÄREN e.V.<br>
+Postfach 75 02 07<br>
+81332 München<br>
+<br>
+Vereinsregister-Nummer 209533<br>
+Amtsgericht München<br>
+Geschäftsführung: Florian Handwerker<br>
+
+<pre>
+Webseite : <a href="https://die-libertaeren.de/">die-libertaeren.de</a>
+E-Mail   : <a href="mailto:info@die-libertaeren.de">info@die-libertaeren.de"</a>
+Telefon  : <a href="tel:${DEFAULT_TELEFON.replaceAll(" ", "")}">${DEFAULT_TELEFON}</a>
+X/Twitter: <a href="https://x.com/Die_Libertaeren">@Die_Libertaeren</a>
+YouTube  : <a href="https://www.youtube.com/@die_libertaeren">youtube.com/@Die_Libertaeren</a>
+</pre>
+</font>
+        `
+
+        mailSigHTML = mailSigHTML.trim()
+        mailSigHTML = mailSigHTML.replaceAll("\n\n", "\n")
+
+        window.mailSigHTML = mailSigHTML
+
+        document.getElementById('mail-sig-html').value = mailSigHTML
+        document.getElementById('mail-sig-preview').innerHTML = mailSigHTML.replace(/<pre>\s*/gm, "<pre>")
+    }
+
+    document.querySelector('textarea').addEventListener('keyup', function() {
+        const mailSigHTML = document.getElementById('mail-sig-html').value;
+        document.getElementById('mail-sig-preview').innerHTML = mailSigHTML.replace(/<pre>\s*/gm, "<pre>")
     })
+
+    updateEMailSig();
+
+    const inputNodes = document.querySelectorAll('input')
+    for (var i = 0; i < inputNodes.length; i++) {
+        inputNodes[i].addEventListener('keyup', updateEMailSig);
+    }
+
 </script>
 </body>
 </html>
