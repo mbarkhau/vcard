@@ -129,35 +129,78 @@
     const width_pt = width_mm * pt_per_mm
     const height_pt = height_mm * pt_per_mm
 
-    function getInfo() {
-        var vorname = document.getElementsByName('vorname')[0].value || "Max"
-        var nachname = document.getElementsByName('nachname')[0].value || "Mustermann"
-        var rolle = document.getElementsByName('rolle')[0].value || "Parteimitglied"
-
-        var x_profil = document.getElementsByName('x-profil')[0].value || DEFAULT_X_PROFIL
-        if (x_profil.slice(0, 1) == "@") {
-            x_profil = x_profil.slice(1)
+    const cachedInfoStr = localStorage.getItem('cachedInfo')
+    if (cachedInfoStr) {
+        const cachedInfo = JSON.parse(cachedInfoStr)
+        if (cachedInfo.vorname != cachedInfo.defaults.vorname) {
+            document.getElementsByName('vorname')[0].value   = cachedInfo.vorname
         }
-        var default_email = `
+        if (cachedInfo.nachname != cachedInfo.defaults.nachname) {
+            document.getElementsByName('nachname')[0].value  = cachedInfo.nachname
+        }
+        if (cachedInfo.rolle != cachedInfo.defaults.rolle) {
+            document.getElementsByName('rolle')[0].value     = cachedInfo.rolle
+        }
+        if (cachedInfo.x_profil != cachedInfo.defaults.x_profil) {
+            document.getElementsByName('x-profil')[0].value  = cachedInfo.x_profil
+        }
+        if (cachedInfo.adresse_1 != cachedInfo.defaults.adresse_1) {
+            document.getElementsByName('adresse-1')[0].value = cachedInfo.adresse_1
+        }
+        if (cachedInfo.adresse_2 != cachedInfo.defaults.adresse_2) {
+            document.getElementsByName('adresse-2')[0].value = cachedInfo.adresse_2
+        }
+        if (cachedInfo.email != cachedInfo.defaults.email) {
+            document.getElementsByName('email')[0].value     = cachedInfo.email
+        }
+        if (cachedInfo.telefon != cachedInfo.defaults.telefon) {
+            document.getElementsByName('telefon')[0].value   = cachedInfo.telefon
+        }
+    }
+
+    function getInfo() {
+        const defaults = {
+            vorname  : "Max",
+            nachname : "Mustermann",
+            rolle    : "Parteimitglied",
+            adresse_1: "Postfach 75 02 07",
+            adresse_2: "81332 München",
+            telefon  : DEFAULT_TELEFON,
+            x_profil : DEFAULT_X_PROFIL,
+        }
+
+        var vorname = document.getElementsByName('vorname')[0].value || defaults.vorname
+        var nachname = document.getElementsByName('nachname')[0].value || defaults.nachname
+        var rolle = document.getElementsByName('rolle')[0].value || defaults.rolle
+
+        defaults.email = `
             ${vorname.toLowerCase().replace("ä", "ae").replace("ö", "oe").replace("ü", "ue")}
             .
             ${nachname.toLowerCase().replace("ä", "ae").replace("ö", "oe").replace("ü", "ue")}
             @die-libertaeren.de
         `
 
-        default_email = default_email.replaceAll(/\s/g, "")
+        defaults.email = defaults.email.replaceAll(/\s/g, "")
 
-        return {
+        var x_profil = document.getElementsByName('x-profil')[0].value || defaults.x_profil
+        if (x_profil.slice(0, 1) == "@") {
+            x_profil = x_profil.slice(1)
+        }
+
+        const info = {
+            defaults : defaults,
             vorname  : vorname,
             nachname : nachname,
             rolle    : rolle,
-            adresse_1: document.getElementsByName('adresse-1')[0].value || "Postfach 75 02 07",
-            adresse_2: document.getElementsByName('adresse-2')[0].value || "81332 München",
-            email    : document.getElementsByName('email')[0].value || default_email,
-            telefon  : document.getElementsByName('telefon')[0].value || DEFAULT_TELEFON,
+            adresse_1: document.getElementsByName('adresse-1')[0].value || defaults.adresse_1,
+            adresse_2: document.getElementsByName('adresse-2')[0].value || defaults.adresse_2,
+            email    : document.getElementsByName('email')[0].value || defaults.email,
+            telefon  : document.getElementsByName('telefon')[0].value || defaults.telefon,
             x_profil : x_profil,
             short_name: (vorname.slice(0, 1) + nachname.slice(0, 3)).toLowerCase(),
         }
+        localStorage.setItem('cachedInfo', JSON.stringify(info));
+        return info
     }
 
     document.getElementById("gen-pdf").addEventListener('click', async function() {
@@ -278,17 +321,20 @@
         clean_telefon = clean_telefon.replaceAll(" ", "")
 
         var mailSigHTML = `
-Mit freundlichen Grüßen<br>
+Mit freiheitlichen Grüßen<br>
+<br>
 ${info.vorname} ${info.nachname}<br>
 ${info.rolle}<br>
-
+<br>
 <font size="2" color="#888">
-<pre>
-E-Mail   : <a href="mailto:${info.email}">${info.email}</a>
-Telefon  : <a href="tel:${clean_telefon}">${info.telefon}</a>
-X/Twitter: <a href="https://x.com/${info.x_profil}">@${info.x_profil}</a>
-</pre>
-
+<table role="presentation" border="0" cellspacing="0">
+<tr><td>E-Mail</td><td>: <a href="mailto:${info.email}">${info.email}</a></td></tr>
+<tr><td>Telefon</td><td>: <a href="tel:${clean_telefon}">${info.telefon}</a></td></tr>
+<tr><td>X/Twitter</td><td>: <a href="https://x.com/${info.x_profil}">@${info.x_profil}</a></td></tr>
+</table>
+<br>
+<img width="126" height="36" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPwAAABICAMAAADlLmg2AAABpFBMVEUAAAD////////////8/Pz///////////////+Dg4P///////////////////////+Dg4OCgoL///////////////////////////////+CgoKCgoL///////////////////+CgoL///+CgoL///+CgoKCgoL///////////+CgoKCgoL///+CgoL///+CgoL///////////////+CgoKCgoL///////////////////////+CgoL///////////////+CgoKzs7PHx8f///+CgoKtra0AAAD/uyT/TQYBAQH/vSQgICAUFBT+tSL9rh82Njb/pR0ICAgoKCj+siHudQ5wcHBBQUE7OzstLS35oxz/mxv/jxj/eBH/cA93d3dWVlZmZmZfX1/0jhX/VAiKiopQUFD/lRoPDw//YAuFhYV+fn5LS0vxtjH+qh/5nhr5kRf/hhbwVRXyiBNra2v6tyb/ihb/fhPzVBPxghL/ag37qh/4mRj/ghTlbhH/Zg3/WQrjuV/suUTvfA9GRkbhrEHxpCnyfxDnYgfXlSvYgCbyfiJIR/vwAAAAR3RSTlMATA8FEUgOCjYEHhdXC01aECRnIhMJTj9AWEcJa4I6J3AeNRRUQDtSMCMpDmxWOS5cLBx/TjN2PDJEKiAZo4tiB2ImG7R9K/0hp3gAAAilSURBVHja5NWxysMgEMDxrrfpGicRHQziErc8QCGQUNDF1bkkIB3kC4Ek0PbrUzeUvkOHuzf48T+90y8H4IR1gNUMKx/qlnKCEw+Mu/vCGUo9ELtOjcaZHoTbpkW1OPHEbjEYnOmB0aZLoaI49cJdz+WjB3QnDxivbuMeJCdEEDS//rc0EG3GvAfX8hXNwQf2LX2kT6U8FNV3h+XgA6GJCvjsfdlzllSnzQoU+MMsL1ILVrfOhJCS5FR5hSM9ELsMt8pSrUx45nmSnKvLalG8ehDq4bveNOYVniGO81FezleFYu9ByOw7H6cSljz8xSipNSMefBq6sz/YfdcPw3+jmuTx4N/kmM9LAkEUx3O3dcs080dlPzCSyiWRQOsQnTzErCzMtOXBTD0J4iF/QRqa6MVT/3TPURmnrg7v0AeEfe/24X3nza7tkmM7M2zbZo+53Bdz/o98q0UdewEb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" />
+<br>
 DIE LIBERTÄREN e.V.<br>
 Postfach 75 02 07<br>
 81332 München<br>
@@ -296,25 +342,41 @@ Postfach 75 02 07<br>
 Vereinsregister-Nummer 209533<br>
 Amtsgericht München<br>
 Geschäftsführung: Florian Handwerker<br>
-
-<pre>
-Webseite : <a href="https://die-libertaeren.de/">die-libertaeren.de</a>
-E-Mail   : <a href="mailto:info@die-libertaeren.de">info@die-libertaeren.de</a>
-Telefon  : <a href="tel:${DEFAULT_TELEFON.replaceAll(" ", "")}">${DEFAULT_TELEFON}</a>
-X/Twitter: <a href="https://x.com/Die_Libertaeren">@Die_Libertaeren</a>
-YouTube  : <a href="https://www.youtube.com/@die_libertaeren">youtube.com/@Die_Libertaeren</a>
-</pre>
+<br>
+<table role="presentation" border="0" cellspacing="0">
+<tr>
+    <td>Webseite</td>
+    <td>: <a href="https://die-libertaeren.de/">die-libertaeren.de</a></td>
+</tr>
+<tr>
+    <td>E-Mail</td>
+    <td>: <a href="mailto:info@die-libertaeren.de">info@die-libertaeren.de</a></td>
+</tr>
+<tr>
+    <td>Telefon</td>
+    <td>: <a href="tel:${DEFAULT_TELEFON.replaceAll(" ", "")}">${DEFAULT_TELEFON}</a></td>
+</tr>
+<tr>
+    <td>X/Twitter</td>
+    <td>: <a href="https://x.com/Die_Libertaeren">@Die_Libertaeren</a></td>
+</tr>
+<tr>
+    <td>YouTube</td>
+    <td>: <a href="https://www.youtube.com/@die_libertaeren">youtube.com/@Die_Libertaeren</a><td/>
+</tr>
+</table>
 </font>
         `
+
         if (info.x_profil == DEFAULT_X_PROFIL) {
-            mailSigHTML = mailSigHTML.replace(/^X\/Twitter.*/m, "")
-            mailSigHTML = mailSigHTML.replace(/^Telefon  :/m, "Telefon:")
-            mailSigHTML = mailSigHTML.replace(/^E-Mail   :/m, "E-Mail :")
+            mailSigHTML = mailSigHTML.replace(/<tr><td>X\/Twitter.*/m, "")
         }
         if (info.telefon == DEFAULT_TELEFON) {
-            mailSigHTML = mailSigHTML.replace(/^Telefon.*/m, "")
-            mailSigHTML = mailSigHTML.replace(/^E-Mail :/m, "E-Mail:")
+            mailSigHTML = mailSigHTML.replace(/<tr><td>Telefon.*/m, "")
         }
+        mailSigHTML = mailSigHTML.replace(/<tr><td>E-Mail.*/m, "")
+        mailSigHTML = mailSigHTML.replace(/<table[^>]*>\s+<\/table>/m, "")
+        mailSigHTML = mailSigHTML.replace(/(<font[^>]*>)\s+<br>/m, "$1")
 
         mailSigHTML = mailSigHTML.trim()
         mailSigHTML = mailSigHTML.replaceAll("\n\n", "\n")
