@@ -53,9 +53,9 @@
         }
     </style>
 
-    <script type="text/javascript" src="pdf-lib.js"></script>
-    <script src="fontkit.umd.js"></script>
-    <script type="text/javascript" src="download.js"></script>
+    <script type="text/javascript" src="assets/pdf-lib.js"></script>
+    <script src="assets/fontkit.umd.js"></script>
+    <script type="text/javascript" src="assets/download.js"></script>
 
 </head>
 <body>
@@ -118,10 +118,16 @@
     </div>
 
 <script type="text/javascript">
-    const { PDFDocument, StandardFonts, rgb, cymk } = PDFLib;
+    const { PDFDocument, StandardFonts, rgb, cmyk } = PDFLib;
 
     const DEFAULT_X_PROFIL = "Die_Libertaeren"
     const DEFAULT_TELEFON = "+49 159 0632 0502"
+
+    // const COLOR_BLACK = rgb(0.0, 0.0, 0.0)
+    // const COLOR_YELLOW = rgb(0.984, 0.690, 0.082)
+
+    const COLOR_BLACK = cmyk(1.0, 1.0, 1.0, 1.0)
+    const COLOR_YELLOW = cmyk(0.0, 0.36, 0.92, 0.0)
 
     const width_mm = 91
     const height_mm = 61
@@ -206,34 +212,47 @@
     document.getElementById("gen-pdf").addEventListener('click', async function() {
         const info = getInfo()
 
-        const gothamBoldPromise = fetch("Gotham-Font/GothamBold.ttf").then(res => res.arrayBuffer())
-        const robotoBoldPromise = fetch("Roboto-Font/Roboto-Bold.ttf").then(res => res.arrayBuffer())
-
-        const frontPromise = fetch("vcard-front-v3.png").then((res) => res.arrayBuffer())
-        // const backPromise = fetch("vcard-back-fontdebug.png").then((res) => res.arrayBuffer())
-        const backPromise = fetch("vcard-back-v2.png").then((res) => res.arrayBuffer())
+        const gothamBoldPromise = fetch("assets/Gotham-Font/GothamBold.ttf").then(res => res.arrayBuffer())
+        const robotoBoldPromise = fetch("assets/Roboto-Font/Roboto-Bold.ttf").then(res => res.arrayBuffer())
 
         const pdfDoc = await PDFDocument.create()
         pdfDoc.registerFontkit(fontkit)
 
-        const frontImage = await pdfDoc.embedPng(await frontPromise)
-        const backImage = await pdfDoc.embedPng(await backPromise)
-
         const gothamBoldFont = await pdfDoc.embedFont(await gothamBoldPromise)
         const robotoBoldFont = await pdfDoc.embedFont(await robotoBoldPromise)
 
-        const back = pdfDoc.addPage([width_mm * pt_per_mm, height_mm * pt_per_mm])
         const front = pdfDoc.addPage([width_mm * pt_per_mm, height_mm * pt_per_mm])
+        const back = pdfDoc.addPage([width_mm * pt_per_mm, height_mm * pt_per_mm])
 
-        front.drawRectangle({x: -50, y: -50, width: width_pt + 100, height: height_pt + 100, color: rgb(0, 0, 0)})
-        back.drawRectangle({x: -50, y: -50, width: width_pt + 100, height: height_pt + 100, color: rgb(0.984, 0.690, 0.082)})
+        front.drawRectangle({x: -50, y: -50, width: width_pt + 100, height: height_pt + 100, color: COLOR_BLACK})
+        back.drawRectangle({x: -50, y: -50, width: width_pt + 100, height: height_pt + 100, color: COLOR_YELLOW})
+
+
+        const frontPromise = fetch("assets/vcard-front-v3.png").then((res) => res.arrayBuffer())
+        const frontImage = await pdfDoc.embedPng(await frontPromise)
+
+        // const frontPromise = fetch("assets/vcard-front-v3-cmyk.jpg").then((res) => res.arrayBuffer())
+        // const frontImage = await pdfDoc.embedJpg(await frontPromise)
 
         front.drawImage(frontImage, {x: 0, y: 0, width: width_pt, height: height_pt})
+
+
+        // const backPromise = fetch("assets/vcard-back-fontdebug.png").then((res) => res.arrayBuffer())
+        // const backImage = await pdfDoc.embedPng(await backPromise)
+
+        const backPromise = fetch("assets/vcard-back-v2.png").then((res) => res.arrayBuffer())
+        const backImage = await pdfDoc.embedPng(await backPromise)
+
+        // const backPromise = fetch("assets/vcard-back-v2-cmyk.jpg").then((res) => res.arrayBuffer())
+        // const backImage = await pdfDoc.embedJpg(await backPromise)
+
         back.drawImage(backImage, {x: 0, y: 0, width: width_pt, height: height_pt})
 
+
         function cutMarker(x, y, w, h) {
+            return;
             back.drawLine({
-                thickness: 0.4, color: rgb(0, 0, 0),
+                thickness: 0.4, color: COLOR_BLACK,
                 start: {x: x * pt_per_mm, y: y * pt_per_mm},
                 end  : {x: (x + w) * pt_per_mm, y: (y + h) * pt_per_mm}
             })
@@ -335,13 +354,14 @@ ${info.rolle}<br>
 <br>
 <img width="126" height="36" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPwAAABICAMAAADlLmg2AAABpFBMVEUAAAD////////////8/Pz///////////////+Dg4P///////////////////////+Dg4OCgoL///////////////////////////////+CgoKCgoL///////////////////+CgoL///+CgoL///+CgoKCgoL///////////+CgoKCgoL///+CgoL///+CgoL///////////////+CgoKCgoL///////////////////////+CgoL///////////////+CgoKzs7PHx8f///+CgoKtra0AAAD/uyT/TQYBAQH/vSQgICAUFBT+tSL9rh82Njb/pR0ICAgoKCj+siHudQ5wcHBBQUE7OzstLS35oxz/mxv/jxj/eBH/cA93d3dWVlZmZmZfX1/0jhX/VAiKiopQUFD/lRoPDw//YAuFhYV+fn5LS0vxtjH+qh/5nhr5kRf/hhbwVRXyiBNra2v6tyb/ihb/fhPzVBPxghL/ag37qh/4mRj/ghTlbhH/Zg3/WQrjuV/suUTvfA9GRkbhrEHxpCnyfxDnYgfXlSvYgCbyfiJIR/vwAAAAR3RSTlMATA8FEUgOCjYEHhdXC01aECRnIhMJTj9AWEcJa4I6J3AeNRRUQDtSMCMpDmxWOS5cLBx/TjN2PDJEKiAZo4tiB2ImG7R9K/0hp3gAAAilSURBVHja5NWxysMgEMDxrrfpGicRHQziErc8QCGQUNDF1bkkIB3kC4Ek0PbrUzeUvkOHuzf48T+90y8H4IR1gNUMKx/qlnKCEw+Mu/vCGUo9ELtOjcaZHoTbpkW1OPHEbjEYnOmB0aZLoaI49cJdz+WjB3QnDxivbuMeJCdEEDS//rc0EG3GvAfX8hXNwQf2LX2kT6U8FNV3h+XgA6GJCvjsfdlzllSnzQoU+MMsL1ILVrfOhJCS5FR5hSM9ELsMt8pSrUx45nmSnKvLalG8ehDq4bveNOYVniGO81FezleFYu9ByOw7H6cSljz8xSipNSMefBq6sz/YfdcPw3+jmuTx4N/kmM9LAkEUx3O3dcs080dlPzCSyiWRQOsQnTzErCzMtOXBTD0J4iF/QRqa6MVT/3TPURmnrg7v0AeEfe/24X3nza7tkmM7M2zbZo+53Bdz/o98q0UdewEb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" />
 <br>
+<br>
 DIE LIBERTÄREN e.V.<br>
 Postfach 75 02 07<br>
 81332 München<br>
 <br>
 Vereinsregister-Nummer 209533<br>
 Amtsgericht München<br>
-Vorstand: Florian Handwerker, Dr. Mathias Hummel, Manuel Barkhau<br>
+Vorstand: Dr. Mathias Hummel, Florian Handwerker, Manuel Barkhau<br>
 <br>
 <table role="presentation" border="0" cellspacing="0">
 <tr>
