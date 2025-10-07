@@ -129,8 +129,8 @@
     const COLOR_BLACK = cmyk(1.0, 1.0, 1.0, 1.0)
     const COLOR_YELLOW = cmyk(0.0, 0.36, 0.92, 0.0)
 
-    const width_mm = 91
-    const height_mm = 61
+    const width_mm = 89
+    const height_mm = 59
     const pt_per_mm = 72 / 25.4
     const width_pt = width_mm * pt_per_mm
     const height_pt = height_mm * pt_per_mm
@@ -212,45 +212,45 @@
     document.getElementById("gen-pdf").addEventListener('click', async function() {
         const info = getInfo()
 
-        const gothamBoldPromise = fetch("assets/Gotham-Font/GothamBold.ttf").then(res => res.arrayBuffer())
-        const robotoBoldPromise = fetch("assets/Roboto-Font/Roboto-Bold.ttf").then(res => res.arrayBuffer())
+        const gothamBlackPromise = fetch("assets/Gotham-Font/ttf/GothamBlack.ttf").then(res => res.arrayBuffer())
+        const gothamBoldPromise = fetch("assets/Gotham-Font/ttf/GothamBold.ttf").then(res => res.arrayBuffer())
+        const robotoPromise = fetch("assets/Roboto-Font/Roboto-Medium.ttf").then(res => res.arrayBuffer())
 
         const pdfDoc = await PDFDocument.create()
         pdfDoc.registerFontkit(fontkit)
 
+        const gothamBlackFont = await pdfDoc.embedFont(await gothamBlackPromise)
         const gothamBoldFont = await pdfDoc.embedFont(await gothamBoldPromise)
-        const robotoBoldFont = await pdfDoc.embedFont(await robotoBoldPromise)
+        const robotoFont = await pdfDoc.embedFont(await robotoPromise)
 
         const front = pdfDoc.addPage([width_mm * pt_per_mm, height_mm * pt_per_mm])
-        const back = pdfDoc.addPage([width_mm * pt_per_mm, height_mm * pt_per_mm])
-
         front.drawRectangle({x: -50, y: -50, width: width_pt + 100, height: height_pt + 100, color: COLOR_BLACK})
-        back.drawRectangle({x: -50, y: -50, width: width_pt + 100, height: height_pt + 100, color: COLOR_YELLOW})
-
 
         const frontPromise = fetch("assets/vcard-front-v3.png").then((res) => res.arrayBuffer())
-        const frontImage = await pdfDoc.embedPng(await frontPromise)
-
         // const frontPromise = fetch("assets/vcard-front-v3-cmyk.jpg").then((res) => res.arrayBuffer())
+
+        const frontImage = await pdfDoc.embedPng(await frontPromise)
         // const frontImage = await pdfDoc.embedJpg(await frontPromise)
 
         front.drawImage(frontImage, {x: 0, y: 0, width: width_pt, height: height_pt})
 
+        const back = pdfDoc.addPage([width_mm * pt_per_mm, height_mm * pt_per_mm])
+        back.drawRectangle({x: -50, y: -50, width: width_pt + 100, height: height_pt + 100, color: COLOR_YELLOW})
+
+        const backPromise = fetch("assets/vcard-back-v3.png").then((res) => res.arrayBuffer())
+        const backImage = await pdfDoc.embedPng(await backPromise)
 
         // const backPromise = fetch("assets/vcard-back-fontdebug.png").then((res) => res.arrayBuffer())
         // const backImage = await pdfDoc.embedPng(await backPromise)
 
-        const backPromise = fetch("assets/vcard-back-v2.png").then((res) => res.arrayBuffer())
-        const backImage = await pdfDoc.embedPng(await backPromise)
-
         // const backPromise = fetch("assets/vcard-back-v2-cmyk.jpg").then((res) => res.arrayBuffer())
-        // const backImage = await pdfDoc.embedJpg(await backPromise)
+        // const backImage = await pdfDoc.embedPng(await backPromise)
 
         back.drawImage(backImage, {x: 0, y: 0, width: width_pt, height: height_pt})
 
 
         function cutMarker(x, y, w, h) {
-            return;
+            // return;
             back.drawLine({
                 thickness: 0.4, color: COLOR_BLACK,
                 start: {x: x * pt_per_mm, y: y * pt_per_mm},
@@ -288,14 +288,14 @@
         }
 
         const renderTitle = textRenderer(back, {
-            size: 9.5,
-            font: gothamBoldFont,
+            size: 10,
+            font: gothamBlackFont,
             color: rgb(0.0, 0.0, 0.0),
             letterSpacing: -0.4,
         })
 
-        renderTitle(info.vorname.toUpperCase(), 30.0, 139)
-        renderTitle(info.nachname.toUpperCase(), 30.0, 130)
+        renderTitle(info.vorname.toUpperCase(), 19, 139)
+        renderTitle(info.nachname.toUpperCase(), 19, 129)
 
         const renderRole = textRenderer(back, {
             size: 7.0,
@@ -304,20 +304,33 @@
             letterSpacing: -0.25,
         })
 
-        renderRole(info.rolle.toUpperCase(), 30.0, 112)
+        const rollen = info.rolle.toUpperCase().split("/")
+        if (rollen.length == 1) {
+            renderRole(info.rolle.toUpperCase(), 19, 112)
+        } else {
+            renderRole(rollen[0] + "/", 19, 112)
+            renderRole(rollen[1]      , 19, 112 - 7)
+        }
 
         const renderInfo = textRenderer(back, {
             size: 7.0,
-            font: robotoBoldFont,
+            font: robotoFont,
             color: rgb(0.0, 0.0, 0.0),
             letterSpacing: -0.10,
         })
+        const renderEmail = textRenderer(back, {
+            size: 7.0,
+            font: robotoFont,
+            color: rgb(0.0, 0.0, 0.0),
+            letterSpacing: -0.25,
+        })
 
-        renderInfo(info.adresse_1, 40.0, 95 - 3)
-        renderInfo(info.adresse_2, 40.0, 95 - 10.2)
-        renderInfo(info.email    , 40.0, 95 - 22.8)
-        renderInfo(info.telefon  , 40.0, 95 - 36.2)
-        renderInfo('@' + info.x_profil, 40.0, 95 - 48.8)
+        const x_profil = '@' + info.x_profil;
+        renderInfo(info.adresse_1, 30.0, 90 - 0)
+        renderInfo(info.adresse_2, 30.0, 90 - 6.5)
+        renderEmail(info.email   , 30.0, 90 - 21.5)
+        renderInfo(info.telefon  , 30.0, 90 - 36)
+        renderInfo(x_profil      , 30.0, 90 - 50)
 
         var date = new Date().toISOString().replaceAll("-", "").replaceAll(":", "").slice(0, 15)
 
