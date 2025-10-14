@@ -226,7 +226,7 @@
         const front = pdfDoc.addPage([width_mm * pt_per_mm, height_mm * pt_per_mm])
         front.drawRectangle({x: -50, y: -50, width: width_pt + 100, height: height_pt + 100, color: COLOR_BLACK})
 
-        const frontPromise = fetch("assets/vcard-front-v3.png").then((res) => res.arrayBuffer())
+        const frontPromise = fetch("assets/vcard-front-v4.png").then((res) => res.arrayBuffer())
         // const frontPromise = fetch("assets/vcard-front-v3-cmyk.jpg").then((res) => res.arrayBuffer())
 
         const frontImage = await pdfDoc.embedPng(await frontPromise)
@@ -237,7 +237,7 @@
         const back = pdfDoc.addPage([width_mm * pt_per_mm, height_mm * pt_per_mm])
         back.drawRectangle({x: -50, y: -50, width: width_pt + 100, height: height_pt + 100, color: COLOR_YELLOW})
 
-        const backPromise = fetch("assets/vcard-back-v3.png").then((res) => res.arrayBuffer())
+        const backPromise = fetch("assets/vcard-back-v4.png").then((res) => res.arrayBuffer())
         const backImage = await pdfDoc.embedPng(await backPromise)
 
         // const backPromise = fetch("assets/vcard-back-fontdebug.png").then((res) => res.arrayBuffer())
@@ -316,21 +316,27 @@
             size: 7.0,
             font: robotoFont,
             color: rgb(0.0, 0.0, 0.0),
-            letterSpacing: -0.10,
+            letterSpacing: -0.05,
         })
         const renderEmail = textRenderer(back, {
             size: 7.0,
             font: robotoFont,
             color: rgb(0.0, 0.0, 0.0),
-            letterSpacing: -0.25,
+            letterSpacing: -0.15,
         })
 
         const x_profil = '@' + info.x_profil;
-        renderInfo(info.adresse_1, 30.0, 90 - 0)
-        renderInfo(info.adresse_2, 30.0, 90 - 6.5)
-        renderEmail(info.email   , 30.0, 90 - 21.0)
-        renderInfo(info.telefon  , 30.0, 90 - 36)
-        renderInfo(x_profil      , 30.0, 90 - 50)
+        // renderInfo(info.adresse_1, 30.0, 90 - 0)
+        // renderInfo(info.adresse_2, 30.0, 90 - 6.5)
+        // renderEmail(info.email   , 30.0, 90 - 21.0)
+        // renderInfo(info.telefon  , 30.0, 90 - 36)
+        // renderInfo(x_profil      , 30.0, 90 - 50)
+
+        renderInfo(x_profil      , 30.0, 90 - 0)
+        renderInfo(info.telefon  , 30.0, 90 - 15)
+        renderEmail(info.email   , 30.0, 90 - 30)
+        renderInfo(info.adresse_1, 30.0, 90 - 45)
+        renderInfo(info.adresse_2, 30.0, 90 - 53)
 
         var date = new Date().toISOString().replaceAll("-", "").replaceAll(":", "").slice(0, 15)
 
